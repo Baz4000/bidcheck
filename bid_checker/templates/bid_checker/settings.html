@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Bid Site Credentials{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>BID SITE CREDENTIALS</h1>
+  </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+  {% for msg in messages %}
+  <div class="msg msg-{{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="settings-card">
+  <p class="settings-note">
+    Update your crewbids.kalittaair.com login details. Leave a field blank to keep the current value.
+    The password is stored in the database and never displayed.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="field-group">
+      <label for="kalitta_username">Username / Employee ID</label>
+      <input type="text" id="kalitta_username" name="kalitta_username"
+             value="{{ kalitta_username }}" autocomplete="off">
+    </div>
+
+    <div class="field-group">
+      <label for="kalitta_password">Password</label>
+      <input type="password" id="kalitta_password" name="kalitta_password"
+             placeholder="Enter new password to change" autocomplete="new-password">
+      <span class="field-hint">Leave blank to keep current password.</span>
+    </div>
+
+    <div class="field-group">
+      <label for="kalitta_employee_id">Employee ID (for personal bids)</label>
+      <input type="text" id="kalitta_employee_id" name="kalitta_employee_id"
+             value="{{ kalitta_employee_id }}" autocomplete="off">
+      <span class="field-hint">Used to pull your personal bid choices. Usually same as username.</span>
+    </div>
+
+    <button class="btn-refresh" type="submit">💾 Save Credentials</button>
+    <a href="{% url 'bid_checker:dashboard' %}" class="btn-back" style="margin-left:12px;">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .settings-card {
+    background: #fff;
+    border: 1px solid #d8dce3;
+    border-radius: 8px;
+    padding: 28px 32px;
+    max-width: 520px;
+  }
+  .settings-note {
+    color: #667;
+    font-size: .87em;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+  }
+  .field-group label {
+    font-weight: 600;
+    font-size: .85em;
+    color: #334;
+  }
+  .field-group input {
+    padding: 9px 12px;
+    border: 1px solid #c8d0dc;
+    border-radius: 5px;
+    font-size: .9em;
+    width: 100%;
+    background: #fafbfc;
+  }
+  .field-group input:focus {
+    outline: none;
+    border-color: #3060a0;
+    background: #fff;
+  }
+  .field-hint {
+    font-size: .78em;
+    color: #999;
+  }
+</style>
+{% endblock %}

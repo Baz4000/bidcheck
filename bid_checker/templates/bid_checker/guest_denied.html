@@ -1,0 +1,68 @@
+{% extends "base_guest.html" %}
+
+{% block title %}Bid Status — Unavailable{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 80px auto; padding: 36px 38px;
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(20,30,60,.08); text-align: center;">
+
+  {% if reason == 'not_found' %}
+    <h1 style="font-size: 1.3em; margin-bottom: 12px; color: #721c24;">Staff Number Not Recognised</h1>
+    <p style="color: #555; font-size: .94em; line-height: 1.55;">
+      We don't have <strong>#{{ staff_number }}</strong> on the approved list yet.
+    </p>
+    <p style="color: #555; font-size: .94em; line-height: 1.55; margin-top: 12px;">
+      If you're a 777 pilot and want access, ask Barry.
+    </p>
+
+  {% elif reason == 'inactive' %}
+    <h1 style="font-size: 1.3em; margin-bottom: 12px; color: #856404;">Access Pending</h1>
+    <p style="color: #555; font-size: .94em; line-height: 1.55;">
+      Your record is here, {{ guest.name }} — but it hasn't been activated yet.
+    </p>
+    <p style="color: #555; font-size: .94em; line-height: 1.55; margin-top: 12px;">
+      Drop Barry a line and he'll flip the switch.
+    </p>
+
+  {% elif reason == 'no_snapshot' %}
+    <h1 style="font-size: 1.3em; margin-bottom: 12px;">No Bid Data Yet</h1>
+    <p style="color: #555; font-size: .94em; line-height: 1.55;">
+      The system hasn't pulled any bids yet this cycle. Try again in a bit.
+    </p>
+
+  {% elif reason == 'no_bids' %}
+    <h1 style="font-size: 1.3em; margin-bottom: 12px;">No Current Bids Submitted</h1>
+    <p style="color: #555; font-size: .94em; line-height: 1.55;">
+      The latest snapshot doesn't contain any bid preferences for {{ guest.name }}.
+    </p>
+    <p style="color: #888; font-size: .85em; line-height: 1.55; margin-top: 12px;">
+      Either you haven't submitted bids yet this cycle, or you're off this month
+      (LOA, training, leave). Submit your bids on crewbids.kalittaair.com and
+      check back once the next refresh runs.
+    </p>
+
+  {% elif reason == 'analysis_failed' %}
+    <h1 style="font-size: 1.3em; margin-bottom: 12px; color: #721c24;">Analysis Error</h1>
+    <p style="color: #555; font-size: .94em; line-height: 1.55;">
+      Something went wrong running the simulation. Barry has been logged.
+    </p>
+    {% if detail %}
+    <p style="color: #888; font-size: .78em; margin-top: 12px; font-family: ui-monospace, monospace;">
+      {{ detail }}
+    </p>
+    {% endif %}
+
+  {% else %}
+    <h1 style="font-size: 1.3em; margin-bottom: 12px;">Unavailable</h1>
+    <p style="color: #555; font-size: .94em;">Couldn't load your bid status right now.</p>
+  {% endif %}
+
+  <a href="{% url 'guest_landing' %}"
+     style="display: inline-block; margin-top: 24px;
+            color: #3060a0; text-decoration: none; font-size: .88em;
+            padding: 8px 18px; border: 1px solid #c0cce0; border-radius: 5px;">
+    ← Try a different number
+  </a>
+</div>
+{% endblock %}

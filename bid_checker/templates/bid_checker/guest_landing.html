@@ -1,0 +1,54 @@
+{% extends "base_guest.html" %}
+
+{% block title %}Bid Status — Enter Staff Number{% endblock %}
+
+{% block content %}
+<div style="max-width: 440px; margin: 80px auto; padding: 36px 38px;
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(20,30,60,.08); text-align: center;">
+
+  <h1 style="font-size: 1.4em; margin-bottom: 8px;">Kalitta 777 Bid Status</h1>
+  <p style="color: #667; font-size: .92em; margin-bottom: 28px; line-height: 1.5;">
+    Enter your staff number to see your current bid position,<br>
+    competing pilots, and projected award.
+  </p>
+
+  <form method="post" action="{% url 'guest_landing' %}">
+    {% csrf_token %}
+
+    <input type="text"
+           name="staff_number"
+           value="{{ submitted|default:'' }}"
+           inputmode="numeric"
+           pattern="[0-9]*"
+           autocomplete="off"
+           autofocus
+           placeholder="e.g. 71837"
+           style="width: 100%; padding: 12px 14px; font-size: 1em;
+                  border: 1px solid #c0cce0; border-radius: 6px;
+                  text-align: center; letter-spacing: .04em;
+                  font-variant-numeric: tabular-nums;">
+
+    {% if error %}
+    <div style="margin-top: 12px; color: #721c24; font-size: .85em;">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <button type="submit"
+            style="margin-top: 18px; width: 100%; padding: 11px;
+                   background: #1a4a7a; color: #fff; border: none;
+                   border-radius: 6px; font-size: .95em; font-weight: 600;
+                   cursor: pointer; transition: background .15s;"
+            onmouseover="this.style.background='#1e5a94'"
+            onmouseout="this.style.background='#1a4a7a'">
+      Show my bid status →
+    </button>
+  </form>
+
+  <p style="margin-top: 26px; color: #888; font-size: .78em; line-height: 1.5;">
+    Access is limited to approved 777 pilots.<br>
+    Ask Barry if you'd like in.
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Bid History{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:16px;color:#1a2744">Bid Snapshots</h2>
+
+{% if snapshots %}
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Timestamp (UTC)</th>
+      <th>Projected Award</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for snap in snapshots %}
+  <tr>
+    <td>{{ snap.created_at|date:"Y-m-d H:i" }}</td>
+    <td>
+      {% if snap.success %}
+        <strong>{{ snap.projected_award }}</strong>
+      {% else %}
+        <span style="color:#c00">—</span>
+      {% endif %}
+    </td>
+    <td>
+      {% if snap.success %}
+        <span style="color:#155724">✓ OK</span>
+      {% else %}
+        <span style="color:#c00" title="{{ snap.error_message }}">✗ Error</span>
+      {% endif %}
+    </td>
+    <td>
+      {% if snap.success %}
+      <a href="{% url 'bid_checker:snapshot_detail' snap.pk %}">View</a>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p>No snapshots yet.</p>
+{% endif %}
+{% endblock %}

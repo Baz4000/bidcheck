@@ -1,0 +1,228 @@
+{% extends base_template|default:"base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"Bid Status" }}{% endblock %}
+
+{% block content %}
+{% with d=snapshot.report_data %}
+
+{% if not snapshot %}
+<div class="empty-state">
+  <p>No bid data yet.</p>
+  {% if not is_historical and not is_guest %}
+  <form method="post" action="{% url 'bid_checker:refresh' %}">
+    {% csrf_token %}
+    <button class="btn-refresh" type="submit">📡 Fetch Bids Now</button>
+  </form>
+  {% endif %}
+</div>
+
+{% else %}
+
+{% with subject_name=d.subject_name|default:d.barry_name subject_class=d.subject_class|default:"FO" %}
+<!-- ── Top Bar ─────────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>BID STATUS — {{ subject_name|upper }}</h1>
+    <span class="tag">{{ subject_class }} #{{ d.subject_seniority|default:d.barry_seniority }}</span>
+    <span class="tag">777 Fleet</span>
+    <span class="tag tag-award">⭐ {{ d.projected_award }}</span>
+  </div>
+  <div class="topbar-right">
+    <div class="ts">
+      Data as of&nbsp;<b>{{ d.generated }} UTC</b>
+    </div>
+    {% if not is_historical and not is_guest %}
+    <div class="cdbox">
+      <div class="cdlabel">Bid window closes</div>
+      <div class="cdtimer" id="countdown">--</div>
+    </div>
+    <form method="post" action="{% url 'bid_checker:refresh' %}" id="refreshForm">
+      {% csrf_token %}
+      <button class="btn-refresh" type="submit" id="refreshBtn">
+        📡 Update
+      </button>
+    </form>
+    {% elif is_guest %}
+    <div class="cdbox">
+      <div class="cdlabel">Bid window closes</div>
+      <div class="cdtimer" id="countdown">--</div>
+    </div>
+    {% else %}
+    <a href="{% url 'bid_checker:dashboard' %}" class="btn-back">← Live View</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Messages ───────────────────────────────────────────────── -->
+{% if messages %}
+<div class="messages">
+  {% for msg in messages %}
+  <div class="msg msg-{{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── Summary Pills ──────────────────────────────────────────── -->
+{% with lines=d.lines s=d.summary snb_label=d.senior_not_bid_label|default:"Senior FOs" %}
+<div class="summary">
+  {% if s.projected  %}<span class="pill pill-projected">⭐ {{ s.projected }} Projected</span>{% endif %}
+  {% if s.winning    %}<span class="pill pill-projected">✅ {{ s.winning }} Winning</span>{% endif %}
+  <span class="pill pill-blocked">❌ {{ s.blocked }} Blocked</span>
+  {% if s.competitive %}<span class="pill pill-competitive">🔶 {{ s.competitive }} Competitive</span>{% endif %}
+  {% if s.partial    %}<span class="pill pill-partial">⚠️ {{ s.partial }} Partial</span>{% endif %}
+  {% if s.open       %}<span class="pill pill-open">🟢 {{ s.open }} Open</span>{% endif %}
+  {% if s.ca_only    %}<span class="pill pill-ca-only">🔵 {{ s.ca_only }} CA-Only</span>{% endif %}
+  {% if d.senior_not_bid_count > 0 %}
+  <button class="pill pill-snb" onclick="document.getElementById('snbModal').style.display='flex';">⏳ {{ d.senior_not_bid_count }} {{ snb_label }} Yet to Bid</button>
+  {% endif %}
+</div>
+
+<!-- ── Bid Table ──────────────────────────────────────────────── -->
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th class="col-pri">#</th>
+      <th>LINE</th>
+      <th>STATUS</th>
+      <th>CA SEAT(S)</th>
+      <th>FO SEAT(S)</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for line in lines %}
+  <tr class="row-{{ line.status }}">
+    <td class="col-pri">{{ line.rank }}</td>
+    <td class="col-line">{{ line.line_code }}</td>
+    <td class="col-status">
+      {% if line.status == 'projected' %}⭐
+      {% elif line.status == 'winning' %}✅
+      {% elif line.status == 'blocked' %}❌
+      {% elif line.status == 'competitive' %}🔶
+      {% elif line.status == 'partial' %}⚠️
+      {% elif line.status == 'open' %}🟢
+      {% elif line.status == 'ca-only' %}🔵
+      {% endif %}
+      {{ line.status_text }}
+    </td>
+    <td class="col-ca">
+      {% if line.ca_seats %}
+        {% for seat in line.ca_seats %}
+          {% if seat.is_subject or seat.is_barry %}
+            <strong class="you-tag">{{ seat.name }} (#{{ seat.seniority }}) ←YOU</strong>
+          {% else %}
+            {{ seat.name }} (#{{ seat.seniority }})
+          {% endif %}
+          {% if not forloop.last %},<br>{% endif %}
+        {% endfor %}
+      {% else %}
+        <span class="vacant">vacant</span>
+      {% endif %}
+    </td>
+    <td class="col-fo">
+      {% if line.status == 'ca-only' %}
+        —
+      {% elif line.fo_seats %}
+        {% for seat in line.fo_seats %}
+          {% if seat.is_subject or seat.is_barry %}
+            <strong class="you-tag">{{ seat.name }} (#{{ seat.seniority }}) ←YOU</strong>
+          {% else %}
+            {{ seat.name }} (#{{ seat.seniority }})
+          {% endif %}
+          {% if not forloop.last %},<br>{% endif %}
+        {% endfor %}
+      {% else %}
+        <span class="vacant">vacant</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+
+<!-- ── Senior-not-bid Modal ─────────────────────────────────────────────── -->
+<div id="snbModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+     z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;padding:28px 32px;max-width:440px;
+       width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="color:#1a2744;font-size:1em;font-weight:700;">{{ snb_label }} Yet to Bid</h3>
+      <button onclick="document.getElementById('snbModal').style.display='none'"
+              style="border:none;background:none;font-size:1.4em;cursor:pointer;color:#667;line-height:1;">&#x2715;</button>
+    </div>
+    <p style="color:#667;font-size:.82em;margin-bottom:14px;line-height:1.5;">
+      These pilots are senior to you and have not yet submitted any bid choices.
+      Any of them could still affect your projected award.
+    </p>
+    {% if d.senior_not_bid %}
+    <ol style="margin:0;padding-left:20px;line-height:2.2;">
+      {% for pilot in d.senior_not_bid %}
+      <li style="font-size:.88em;color:#334;"><b>#{{ pilot.seniority }}</b>&nbsp;&nbsp;{{ pilot.name }}</li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p style="color:#2e7d32;font-weight:600;font-size:.88em;">&#x2705; All {{ snb_label|lower }} have submitted bids.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endwith %}
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<div class="tbl-footer">
+  Simulation: full seniority allocation (CA first, then FO in seniority order) ·
+  {{ d.n_prefs }} preferences submitted
+  {% if not is_guest %}· <a href="{% url 'bid_checker:history' %}">View history</a>{% endif %}
+</div>
+
+{% endwith %}
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+{% if not is_historical %}
+<script>
+// ── Countdown timer ──────────────────────────────────────────────────────────
+function updateCountdown() {
+  const now   = new Date();
+  const close = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), 16, 21, 0, 0
+  ));
+  const el = document.getElementById('countdown');
+  if (!el) return;
+  if (now >= close) {
+    el.textContent = 'Window Closed';
+    el.classList.add('closed');
+    return;
+  }
+  const diff = close - now;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor(diff % 86400000 / 3600000);
+  const m = Math.floor(diff % 3600000 / 60000);
+  const s = Math.floor(diff % 60000 / 1000);
+  el.textContent =
+    (d ? d + 'd ' : '') +
+    String(h).padStart(2, '0') + 'h ' +
+    String(m).padStart(2, '0') + 'm ' +
+    String(s).padStart(2, '0') + 's';
+  el.classList.remove('closed');
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// ── Refresh button loading state ─────────────────────────────────────────────
+const refreshForm = document.getElementById('refreshForm');
+if (refreshForm) {
+  refreshForm.addEventListener('submit', function () {
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Fetching…';
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

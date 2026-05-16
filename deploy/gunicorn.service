@@ -1,0 +1,20 @@
+[Unit]
+Description=Empire OS — Gunicorn
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/empire-os
+Environment="DJANGO_SETTINGS_MODULE=empire_os.settings.production"
+EnvironmentFile=/srv/empire-os/.env
+ExecStart=/srv/empire-os/venv/bin/gunicorn \
+          --workers 3 \
+          --bind unix:/run/empire-os/gunicorn.sock \
+          empire_os.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+RuntimeDirectory=empire-os
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

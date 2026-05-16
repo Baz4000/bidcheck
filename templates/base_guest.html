@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Bid Status — Guest{% endblock %}</title>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f5f6f8;
+      color: #1a1a2e;
+      font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Nav (slimmer, no admin/logout) ────────────────────────────────────── */
+    nav {
+      background: #1a2744;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+    }
+    .nav-brand {
+      color: #7df0b0;
+      font-weight: 700;
+      font-size: 1em;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .nav-right { display: flex; gap: 14px; align-items: center; color: #9ab; font-size: .82em; }
+    .nav-right .viewer { color: #fff; font-weight: 600; }
+    .nav-right a {
+      color: #9ab;
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .nav-right a:hover { color: #fff; }
+
+    /* ── Main content ──────────────────────────────────────────────────────── */
+    .content { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Messages ──────────────────────────────────────────────────────────── */
+    .messages { margin-bottom: 16px; }
+    .msg {
+      padding: 10px 16px;
+      border-radius: 5px;
+      margin-bottom: 8px;
+      font-size: .88em;
+    }
+    .msg-success { background: #d4edda; color: #155724; border: 1px solid #b1dfbb; }
+    .msg-error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .msg-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+    /* ── Top bar ───────────────────────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .topbar-left  { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    h1 { color: #1a2744; font-size: 1.3em; font-weight: 700; letter-spacing: .02em; }
+
+    /* ── Tags ──────────────────────────────────────────────────────────────── */
+    .tag {
+      background: #e0e7f0;
+      color: #3060a0;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: .82em;
+      font-weight: 600;
+    }
+    .tag-award { background: #d4edda; color: #155724; }
+
+    /* ── Timestamp ─────────────────────────────────────────────────────────── */
+    .ts { font-size: .82em; color: #667; }
+    .ts b { color: #334; }
+
+    /* ── Countdown ─────────────────────────────────────────────────────────── */
+    .cdbox {
+      background: #1a2744;
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 6px;
+      text-align: center;
+      min-width: 190px;
+    }
+    .cdlabel { font-size: .7em; color: #9ab; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 2px; }
+    .cdtimer { font-size: 1.3em; font-weight: 700; font-variant-numeric: tabular-nums; color: #7df0b0; }
+    .cdtimer.closed { color: #e07070; font-size: .95em; }
+
+    /* ── Summary pills ─────────────────────────────────────────────────────── */
+    .summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .pill {
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-size: .81em;
+      font-weight: 600;
+    }
+    .pill-projected  { background: #d4edda; color: #155724; border: 1px solid #b1dfbb; }
+    .pill-blocked    { background: #e2e3e5; color: #6c757d; border: 1px solid #d0d0d0; }
+    .pill-competitive{ background: #e8e8e8; color: #bf5600; border: 1px solid #d0d0d0; }
+    .pill-partial    { background: #e8e8e8; color: #856404; border: 1px solid #d0d0d0; }
+    .pill-open       { background: #d1ecf1; color: #0c5460; border: 1px solid #b8daff; }
+    .pill-ca-only    { background: #e8e8f0; color: #6060a0; border: 1px solid #d0d0e0; }
+    .pill-snb        { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; cursor: pointer; }
+
+    /* ── Table ─────────────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 700px;
+      background: #fff;
+      border: 1px solid #d8dce3;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    thead th {
+      background: #edf0f5;
+      color: #4a5568;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: .04em;
+      font-size: .8em;
+      text-transform: uppercase;
+      border-bottom: 2px solid #d0d5dd;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #eef0f4; transition: background .1s; }
+    tbody tr:hover { filter: brightness(.97); }
+    td { padding: 9px 14px; vertical-align: top; }
+    .col-pri  { color: #999; width: 40px; text-align: right; padding-right: 18px; font-weight: 500; }
+    .col-line { font-weight: 700; width: 60px; }
+    .col-status { width: 260px; white-space: nowrap; font-weight: 500; }
+    .col-ca, .col-fo { color: #444; line-height: 1.6; }
+
+    tr.row-projected   { background: #d4edda; }
+    tr.row-projected .col-line   { color: #155724; }
+    tr.row-projected .col-status { color: #155724; font-weight: 700; }
+    tr.row-winning     { background: #cce5ff; }
+    tr.row-winning .col-status   { color: #004085; font-weight: 700; }
+    tr.row-blocked     { background: #e9e9e9; }
+    tr.row-blocked td  { color: #999; }
+    tr.row-blocked .col-line { color: #aaa; }
+    tr.row-competitive .col-status { color: #bf5600; font-weight: 600; }
+    tr.row-partial .col-status     { color: #8a6d00; font-weight: 600; }
+    tr.row-open        { background: #e8f5e9; }
+    tr.row-open .col-status        { color: #2e7d32; font-weight: 600; }
+    tr.row-ca-only     { background: #f0f0f5; }
+    tr.row-ca-only td  { color: #aaa; }
+    .you-tag  { color: #155724; font-weight: 700; }
+    .vacant   { color: #bbb; font-style: italic; }
+
+    .tbl-footer { margin-top: 14px; color: #999; font-size: .78em; }
+    .tbl-footer a { color: #3060a0; }
+
+    /* ── Empty state ───────────────────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 60px 20px; color: #667; }
+    .empty-state p { margin-bottom: 20px; font-size: 1.1em; }
+
+    /* ── Responsive ─────────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      h1 { font-size: 1.1em; }
+      .cdbox { min-width: 150px; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/guest/">Bid Status</a>
+  <div class="nav-right">
+    {% if guest %}
+      <span>Viewing as <span class="viewer">{{ guest.name }} (#{{ guest.staff_number }})</span></span>
+      <a href="/guest/">Switch pilot</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="content">
+  {% block content %}{% endblock %}
+</div>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

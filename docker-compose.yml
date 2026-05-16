@@ -1,0 +1,52 @@
+services:
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB:       empire_os
+      POSTGRES_USER:     empire_os
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U empire_os"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SECRET_KEY:          ${SECRET_KEY}
+      DEBUG:               "False"
+      ALLOWED_HOSTS:       ${ALLOWED_HOSTS}
+      DATABASE_URL:        postgres://empire_os:${DB_PASSWORD}@db:5432/empire_os
+      KALITTA_USERNAME:    ${KALITTA_USERNAME}
+      KALITTA_PASSWORD:    ${KALITTA_PASSWORD}
+      KALITTA_EMPLOYEE_ID: ${KALITTA_EMPLOYEE_ID:-71837}
+    volumes:
+      - static_files:/srv/empire-os/static_collected
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:1.25-alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx-docker.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_files:/srv/static:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_files:
