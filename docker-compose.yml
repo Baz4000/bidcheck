@@ -31,6 +31,9 @@ services:
       KALITTA_EMPLOYEE_ID: ${KALITTA_EMPLOYEE_ID:-71837}
     volumes:
       - static_files:/srv/empire-os/static_collected
+      # Bind-mount test_data so capture_test_snapshot writes survive container restart
+      # and so load_test_snapshot can read committed fixtures from the repo.
+      - ./bid_checker/test_data:/srv/empire-os/bid_checker/test_data
     expose:
       - "8000"
 
