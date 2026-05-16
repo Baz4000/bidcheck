@@ -12,8 +12,9 @@ urlpatterns = [
     path('bids/', include('bid_checker.urls', namespace='bid_checker')),
 
     # Public guest entry — no login required
-    path('guest/',                   bid_views.guest_landing,     name='guest_landing'),
-    path('guest/<str:staff_number>/', bid_views.guest_bid_status, name='guest_bid_status'),
+    path('guest/',                            bid_views.guest_landing,         name='guest_landing'),
+    path('guest/<str:staff_number>/',         bid_views.guest_bid_status,      name='guest_bid_status'),
+    path('guest/<str:staff_number>/refresh/', bid_views.guest_trigger_refresh, name='guest_trigger_refresh'),
 
     # Root redirect to bids
     path('', lambda req: __import__('django.shortcuts', fromlist=['redirect']).redirect('/bids/')),

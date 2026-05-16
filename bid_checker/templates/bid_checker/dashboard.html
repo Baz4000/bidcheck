@@ -32,24 +32,20 @@
     <div class="ts">
       Data as of&nbsp;<b>{{ d.generated }} UTC</b>
     </div>
-    {% if not is_historical and not is_guest %}
+    {% if is_historical %}
+    <a href="{% url 'bid_checker:dashboard' %}" class="btn-back">← Live View</a>
+    {% else %}
     <div class="cdbox">
       <div class="cdlabel">Bid window closes</div>
       <div class="cdtimer" id="countdown">--</div>
     </div>
-    <form method="post" action="{% url 'bid_checker:refresh' %}" id="refreshForm">
+    <form method="post" action="{{ refresh_url }}" id="refreshForm">
       {% csrf_token %}
-      <button class="btn-refresh" type="submit" id="refreshBtn">
-        📡 Update
+      <button class="btn-refresh" type="submit" id="refreshBtn"
+              {% if is_guest and not can_refresh %}disabled{% endif %}>
+        {% if is_guest and not can_refresh %}Next refresh in {{ retry_after_seconds }}s{% else %}📡 Update{% endif %}
       </button>
     </form>
-    {% elif is_guest %}
-    <div class="cdbox">
-      <div class="cdlabel">Bid window closes</div>
-      <div class="cdtimer" id="countdown">--</div>
-    </div>
-    {% else %}
-    <a href="{% url 'bid_checker:dashboard' %}" class="btn-back">← Live View</a>
     {% endif %}
   </div>
 </div>
@@ -223,6 +219,24 @@ if (refreshForm) {
     btn.textContent = '⏳ Fetching…';
   });
 }
+
+{% if is_guest %}
+// ── Guest refresh cooldown countdown ─────────────────────────────────────────
+let cooldownLeft = {{ retry_after_seconds|default:0 }};
+function refreshCooldownTick() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn) return;
+  if (cooldownLeft <= 0) {
+    btn.disabled = false;
+    btn.textContent = '📡 Update';
+    return;
+  }
+  btn.textContent = 'Next refresh in ' + cooldownLeft + 's';
+  cooldownLeft--;
+  setTimeout(refreshCooldownTick, 1000);
+}
+if (cooldownLeft > 0) refreshCooldownTick();
+{% endif %}
 </script>
 {% endif %}
 {% endblock %}

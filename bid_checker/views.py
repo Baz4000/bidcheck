@@ -3,15 +3,16 @@ Bid Checker — Views
 
 Authenticated routes:
   GET  /bids/           → dashboard (latest snapshot)
-  POST /bids/refresh/   → run scraper + analyzer, save snapshot, redirect
+  POST /bids/refresh/   → run scraper + analyzer, save snapshot, redirect (UNTHROTTLED)
   GET  /bids/history/   → list of past snapshots
   GET  /bids/settings/  → view/update Kalitta credentials
   POST /bids/settings/  → save credentials to DB
 
 Public guest routes (no login):
-  GET  /guest/                  → staff-number entry form
-  POST /guest/                  → resolves to /guest/<staff_number>/
-  GET  /guest/<staff_number>/   → view that pilot's bid status (if approved)
+  GET  /guest/                          → staff-number entry form
+  POST /guest/                          → resolves to /guest/<staff_number>/
+  GET  /guest/<staff_number>/           → view that pilot's bid status (if approved)
+  POST /guest/<staff_number>/refresh/   → trigger a refresh (60s throttle, shared)
 """
 import logging
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import BidSnapshot, AppSettings, GuestPilot
@@ -31,6 +33,13 @@ logger = logging.getLogger('bid_checker')
 
 OVERVIEW_PATH = settings.BASE_DIR / 'bid_checker' / 'data' / 'Overview.xlsx'
 
+# How long guests must wait between refreshes. Shared across all guests —
+# any refresh (Barry's or another guest's) resets the timer for everyone.
+# Barry's own refreshes are NOT subject to this throttle.
+GUEST_REFRESH_COOLDOWN_SECONDS = getattr(settings, 'GUEST_REFRESH_COOLDOWN_SECONDS', 60)
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _get_overview_bytes() -> bytes:
     if not OVERVIEW_PATH.exists():
@@ -49,23 +58,32 @@ def _kalitta_credentials():
     return username, password, employee_id
 
 
-# ── Authenticated dashboard ──────────────────────────────────────────────────
+def _last_refresh_age_seconds():
+    """Seconds since the most recent BidSnapshot (success or failure).
 
-@login_required
-def dashboard(request):
-    snapshot = BidSnapshot.objects.filter(success=True).order_by('-created_at').first()
-    return render(request, 'bid_checker/dashboard.html', {
-        'snapshot': snapshot,
-        'page_title': 'Bid Status',
-        'is_guest': False,
-        'base_template': 'base.html',
-    })
+    Returns None if no snapshots exist yet.
+    """
+    latest = BidSnapshot.objects.order_by('-created_at').first()
+    if not latest:
+        return None
+    return (datetime.now(timezone.utc) - latest.created_at).total_seconds()
 
 
-@login_required
-@require_POST
-def trigger_refresh(request):
-    logger.info('Manual refresh triggered by %s', request.user)
+def _guest_refresh_cooldown():
+    """Return (can_refresh: bool, retry_after_seconds: int) for guest endpoints."""
+    age = _last_refresh_age_seconds()
+    if age is None or age >= GUEST_REFRESH_COOLDOWN_SECONDS:
+        return True, 0
+    return False, int(GUEST_REFRESH_COOLDOWN_SECONDS - age) + 1
+
+
+def _do_refresh():
+    """Run scrape + analyze + save snapshot. Returns (level, message).
+
+    `level` is one of 'success', 'error' — suitable for messages.<level>().
+    On failure an error snapshot is still recorded so the cooldown timer
+    advances (preventing tight failure loops).
+    """
     try:
         username, password, employee_id = _kalitta_credentials()
 
@@ -94,8 +112,8 @@ def trigger_refresh(request):
         )
 
         projected = result.get('projected_award', '???')
-        messages.success(request, f"Bids refreshed — projected award: {projected}")
         logger.info('Refresh complete. Projected award: %s', projected)
+        return 'success', f"Bids refreshed — projected award: {projected}"
 
     except ScraperError as e:
         logger.error('Scraper error: %s', e)
@@ -104,16 +122,41 @@ def trigger_refresh(request):
             report_data={}, projected_award='',
             success=False, error_message=str(e),
         )
-        messages.error(request, f"Scraper failed: {e}")
+        return 'error', f"Scraper failed: {e}"
 
     except FileNotFoundError as e:
         logger.error('Overview file missing: %s', e)
-        messages.error(request, str(e))
+        return 'error', str(e)
 
     except Exception as e:
         logger.exception('Unexpected error during refresh')
-        messages.error(request, f"Unexpected error: {e}")
+        return 'error', f"Unexpected error: {e}"
 
+
+# ── Authenticated routes ─────────────────────────────────────────────────────
+
+@login_required
+def dashboard(request):
+    snapshot = BidSnapshot.objects.filter(success=True).order_by('-created_at').first()
+    return render(request, 'bid_checker/dashboard.html', {
+        'snapshot': snapshot,
+        'page_title': 'Bid Status',
+        'is_guest': False,
+        'base_template': 'base.html',
+        # Barry is unthrottled
+        'can_refresh': True,
+        'retry_after_seconds': 0,
+        'refresh_url': reverse('bid_checker:refresh'),
+    })
+
+
+@login_required
+@require_POST
+def trigger_refresh(request):
+    """Barry's authenticated refresh — no throttle."""
+    logger.info('Manual refresh triggered by %s', request.user)
+    level, message = _do_refresh()
+    getattr(messages, level)(request, message)
     return redirect('bid_checker:dashboard')
 
 
@@ -173,7 +216,7 @@ def credential_settings(request):
     })
 
 
-# ── Public guest routes (no login) ───────────────────────────────────────────
+# ── Public guest routes ──────────────────────────────────────────────────────
 
 @require_http_methods(['GET', 'POST'])
 def guest_landing(request):
@@ -192,9 +235,10 @@ def guest_landing(request):
 def guest_bid_status(request, staff_number):
     """Render the bid analysis from a guest pilot's perspective.
 
-    Gracefully handles three not-allowed states:
+    Gracefully handles four not-allowed states:
       - pilot not in GuestPilot table          → "ask Barry for access"
       - pilot exists but is_active=False       → "your account is pending"
+      - no snapshot exists yet                 → "no bid data yet"
       - pilot is approved but no current bids  → "no current bid data"
     """
     # 1. Look up the guest
@@ -221,8 +265,7 @@ def guest_bid_status(request, staff_number):
             'guest': guest,
         }, status=503)
 
-    # 3. Re-run the analyzer from the guest's perspective.
-    #    Cheap — sub-second. No precomputation needed.
+    # 3. Re-run the analyzer from the guest's perspective
     try:
         overview_bytes = _get_overview_bytes()
         report_data = analyze_bids(
@@ -231,7 +274,7 @@ def guest_bid_status(request, staff_number):
             overview_xlsx=overview_bytes,
             subject_name=guest.name,
             subject_class=guest.seat_class,
-            subject_xls=None,  # extract from all-bids file
+            subject_xls=None,
         )
     except Exception as e:
         logger.exception('Guest analyzer failed for %s', staff_number)
@@ -253,7 +296,10 @@ def guest_bid_status(request, staff_number):
         last_viewed_at=datetime.now(timezone.utc),
     )
 
-    # 5. Synthesize a snapshot-like object for the template
+    # 5. Compute throttle state for the Update button
+    can_refresh, retry_after = _guest_refresh_cooldown()
+
+    # 6. Synthesize a snapshot-like object for the template
     class _GuestSnapshot:
         def __init__(self, report_data, created_at):
             self.report_data = report_data
@@ -263,9 +309,44 @@ def guest_bid_status(request, staff_number):
     guest_snapshot = _GuestSnapshot(report_data, snapshot.created_at)
 
     return render(request, 'bid_checker/dashboard.html', {
-        'snapshot':       guest_snapshot,
-        'page_title':     f'Bid Status — {guest.name}',
-        'is_guest':       True,
-        'guest':          guest,
-        'base_template':  'base_guest.html',
+        'snapshot':             guest_snapshot,
+        'page_title':           f'Bid Status — {guest.name}',
+        'is_guest':             True,
+        'guest':                guest,
+        'base_template':        'base_guest.html',
+        'can_refresh':          can_refresh,
+        'retry_after_seconds':  retry_after,
+        'refresh_url':          reverse('guest_trigger_refresh',
+                                        args=[guest.staff_number]),
     })
+
+
+@require_POST
+def guest_trigger_refresh(request, staff_number):
+    """Guest-initiated refresh — throttled to once per GUEST_REFRESH_COOLDOWN_SECONDS.
+
+    The throttle is *shared*: a refresh by Barry or another guest also resets
+    the timer for everyone. This protects the Kalitta account from being
+    hammered when many guests are watching the close window.
+    """
+    # Validate guest exists and is active
+    try:
+        guest = GuestPilot.objects.get(staff_number=staff_number)
+    except GuestPilot.DoesNotExist:
+        return redirect('guest_landing')
+    if not guest.is_active:
+        return redirect('guest_bid_status', staff_number=staff_number)
+
+    # Throttle check
+    can_refresh, retry_after = _guest_refresh_cooldown()
+    if not can_refresh:
+        messages.warning(
+            request,
+            f"Data was just refreshed — next refresh available in {retry_after}s."
+        )
+        return redirect('guest_bid_status', staff_number=staff_number)
+
+    logger.info('Guest refresh triggered by %s (#%s)', guest.name, guest.staff_number)
+    level, message = _do_refresh()
+    getattr(messages, level)(request, message)
+    return redirect('guest_bid_status', staff_number=staff_number)
