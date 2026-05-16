@@ -1,0 +1,1175 @@
+{
+  "source_id": 94,
+  "created_at": "2026-05-16T14:13:07.750882+00:00",
+  "projected_award": "F6",
+  "success": true,
+  "error_message": "",
+  "report_data": {
+    "lines": [
+      {
+        "rank": 1,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Rivera Medina, Luis",
+            "is_barry": false,
+            "seniority": 25,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Hamling, Raymond",
+            "is_barry": false,
+            "seniority": 10,
+            "is_subject": false
+          },
+          {
+            "name": "Vanegas, Pedro",
+            "is_barry": false,
+            "seniority": 11,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 2,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F38",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "BLOCKED (all 2 FOs senior)"
+      },
+      {
+        "rank": 2,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Lors, Randall",
+            "is_barry": false,
+            "seniority": 2,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 1,
+        "fo_seats": [
+          {
+            "name": "McGoldrick, Matthew",
+            "is_barry": false,
+            "seniority": 3,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 1,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F5",
+        "own_quota": 1,
+        "own_filled": 1,
+        "status_text": "BLOCKED (all 1 FO senior)"
+      },
+      {
+        "rank": 3,
+        "status": "projected",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Haynes, James",
+            "is_barry": false,
+            "seniority": 103,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 1,
+        "fo_seats": [
+          {
+            "name": "Moore, Barry",
+            "is_barry": true,
+            "seniority": 31,
+            "is_subject": true
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F6",
+        "own_quota": 1,
+        "own_filled": 1,
+        "status_text": "PROJECTED AWARD"
+      },
+      {
+        "rank": 4,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Holland, William",
+            "is_barry": false,
+            "seniority": 24,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Loera, Mark",
+            "is_barry": false,
+            "seniority": 2,
+            "is_subject": false
+          },
+          {
+            "name": "Gosha, Travis",
+            "is_barry": false,
+            "seniority": 8,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 2,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F68",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "BLOCKED (all 2 FOs senior)"
+      },
+      {
+        "rank": 5,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Sterling, Jeffrey",
+            "is_barry": false,
+            "seniority": 30,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Murphy, James",
+            "is_barry": false,
+            "seniority": 34,
+            "is_subject": false
+          },
+          {
+            "name": "Vlack, Andrew",
+            "is_barry": false,
+            "seniority": 44,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F10",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 6,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Outridge, Mark",
+            "is_barry": false,
+            "seniority": 6,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Alphandary, Marc",
+            "is_barry": false,
+            "seniority": 24,
+            "is_subject": false
+          },
+          {
+            "name": "Ball, David",
+            "is_barry": false,
+            "seniority": 25,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 2,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F19",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "BLOCKED (all 2 FOs senior)"
+      },
+      {
+        "rank": 7,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Cameron, Daniel",
+            "is_barry": false,
+            "seniority": 20,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Erini, Mark",
+            "is_barry": false,
+            "seniority": 33,
+            "is_subject": false
+          },
+          {
+            "name": "Westmacott, Richard",
+            "is_barry": false,
+            "seniority": 38,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F20",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 8,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Yates, Jeffrey",
+            "is_barry": false,
+            "seniority": 32,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Ham, Sung",
+            "is_barry": false,
+            "seniority": 19,
+            "is_subject": false
+          },
+          {
+            "name": "Stapleton, Peter",
+            "is_barry": false,
+            "seniority": 23,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 2,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F70",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "BLOCKED (all 2 FOs senior)"
+      },
+      {
+        "rank": 9,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Montoya, Richard",
+            "is_barry": false,
+            "seniority": 92,
+            "is_subject": false
+          },
+          {
+            "name": "White, Kristofer",
+            "is_barry": false,
+            "seniority": 97,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 2,
+        "line_code": "F8",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 10,
+        "status": "partial",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Logsdon, Jason",
+            "is_barry": false,
+            "seniority": 83,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Ryan, Michael",
+            "is_barry": false,
+            "seniority": 101,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F69",
+        "own_quota": 2,
+        "own_filled": 1,
+        "status_text": "PARTIAL (1/2 filled)"
+      },
+      {
+        "rank": 11,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Antoniades, John",
+            "is_barry": false,
+            "seniority": 18,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Pitcher, Ryan",
+            "is_barry": false,
+            "seniority": 1,
+            "is_subject": false
+          },
+          {
+            "name": "Akolawala, Neville",
+            "is_barry": false,
+            "seniority": 15,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 2,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F84",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "BLOCKED (all 2 FOs senior)"
+      },
+      {
+        "rank": 12,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Sinha, Akshay",
+            "is_barry": false,
+            "seniority": 93,
+            "is_subject": false
+          },
+          {
+            "name": "McEnaney, Ty Dean",
+            "is_barry": false,
+            "seniority": 178,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 2,
+        "line_code": "F15",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 13,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Gonzalez , William",
+            "is_barry": false,
+            "seniority": 1,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Aly, Ahmed",
+            "is_barry": false,
+            "seniority": 58,
+            "is_subject": false
+          },
+          {
+            "name": "Ahmed, Shady",
+            "is_barry": false,
+            "seniority": 60,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F32",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 14,
+        "status": "open",
+        "ca_quota": 2,
+        "ca_seats": [],
+        "fo_quota": 1,
+        "fo_seats": [],
+        "n_junior": 0,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 0,
+        "line_code": "F87",
+        "own_quota": 1,
+        "own_filled": 0,
+        "status_text": "OPEN (no bids yet)"
+      },
+      {
+        "rank": 15,
+        "status": "open",
+        "ca_quota": 2,
+        "ca_seats": [
+          {
+            "name": "Hedin, Sean",
+            "is_barry": false,
+            "seniority": 109,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 1,
+        "fo_seats": [],
+        "n_junior": 0,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 0,
+        "line_code": "F91",
+        "own_quota": 1,
+        "own_filled": 0,
+        "status_text": "OPEN (no bids yet)"
+      },
+      {
+        "rank": 16,
+        "status": "partial",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Hegab, Shady",
+            "is_barry": false,
+            "seniority": 110,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Roh, David",
+            "is_barry": false,
+            "seniority": 163,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F13",
+        "own_quota": 2,
+        "own_filled": 1,
+        "status_text": "PARTIAL (1/2 filled)"
+      },
+      {
+        "rank": 17,
+        "status": "partial",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Grenier-Geslain, Yvan",
+            "is_barry": false,
+            "seniority": 86,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Wong, Stephen",
+            "is_barry": false,
+            "seniority": 160,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F18",
+        "own_quota": 2,
+        "own_filled": 1,
+        "status_text": "PARTIAL (1/2 filled)"
+      },
+      {
+        "rank": 18,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Reyes Barrios, Jose",
+            "is_barry": false,
+            "seniority": 98,
+            "is_subject": false
+          },
+          {
+            "name": "Cook, Colin",
+            "is_barry": false,
+            "seniority": 152,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 2,
+        "line_code": "F17",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 19,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "McQueary, Marc",
+            "is_barry": false,
+            "seniority": 34,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Nelisse, Bjorn",
+            "is_barry": false,
+            "seniority": 49,
+            "is_subject": false
+          },
+          {
+            "name": "Thompson, Aran",
+            "is_barry": false,
+            "seniority": 53,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F66",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 20,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Torres Ponce, Victor",
+            "is_barry": false,
+            "seniority": 93,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Skramstad, Robert",
+            "is_barry": false,
+            "seniority": 149,
+            "is_subject": false
+          },
+          {
+            "name": "Powers, Dillon",
+            "is_barry": false,
+            "seniority": 155,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F14",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 21,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "LaMarca, Frank",
+            "is_barry": false,
+            "seniority": 120,
+            "is_subject": false
+          },
+          {
+            "name": "Kidd, James",
+            "is_barry": false,
+            "seniority": 166,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 2,
+        "line_code": "F55",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 22,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Hibpshman, Albert",
+            "is_barry": false,
+            "seniority": 37,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Smith, Kevin",
+            "is_barry": false,
+            "seniority": 50,
+            "is_subject": false
+          },
+          {
+            "name": "Dillon, Madeleine",
+            "is_barry": false,
+            "seniority": 70,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F46",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 23,
+        "status": "competitive",
+        "ca_quota": 2,
+        "ca_seats": [
+          {
+            "name": "Kinzey, Bertram",
+            "is_barry": false,
+            "seniority": 27,
+            "is_subject": false
+          },
+          {
+            "name": "Hussain, Faraz",
+            "is_barry": false,
+            "seniority": 40,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 1,
+        "fo_seats": [
+          {
+            "name": "Robb, Jake",
+            "is_barry": false,
+            "seniority": 36,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 2,
+        "fo_filled": 1,
+        "line_code": "F89",
+        "own_quota": 1,
+        "own_filled": 1,
+        "status_text": "COMPETITIVE (0 senior, 1 junior)"
+      },
+      {
+        "rank": 24,
+        "status": "partial",
+        "ca_quota": 1,
+        "ca_seats": [],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Rogers, Griffin",
+            "is_barry": false,
+            "seniority": 168,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 1,
+        "line_code": "F58",
+        "own_quota": 2,
+        "own_filled": 1,
+        "status_text": "PARTIAL (1/2 filled)"
+      },
+      {
+        "rank": 25,
+        "status": "blocked",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Thamarus, Tyler",
+            "is_barry": false,
+            "seniority": 44,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 1,
+        "fo_seats": [
+          {
+            "name": "Kovacik, Adam",
+            "is_barry": false,
+            "seniority": 5,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 0,
+        "n_senior": 1,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F2",
+        "own_quota": 1,
+        "own_filled": 1,
+        "status_text": "BLOCKED (all 1 FO senior)"
+      },
+      {
+        "rank": 26,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Pierce, Dan",
+            "is_barry": false,
+            "seniority": 35,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Shim, Giwoong",
+            "is_barry": false,
+            "seniority": 83,
+            "is_subject": false
+          },
+          {
+            "name": "Sage, Thomas",
+            "is_barry": false,
+            "seniority": 85,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F28",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 27,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Bell, Tiyal D.A",
+            "is_barry": false,
+            "seniority": 38,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Datoo, Riaz",
+            "is_barry": false,
+            "seniority": 88,
+            "is_subject": false
+          },
+          {
+            "name": "Lane, Austin Blake",
+            "is_barry": false,
+            "seniority": 108,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F21",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 28,
+        "status": "partial",
+        "ca_quota": 1,
+        "ca_seats": [],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Aitken, Peter S",
+            "is_barry": false,
+            "seniority": 171,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 0,
+        "fo_filled": 1,
+        "line_code": "F62",
+        "own_quota": 2,
+        "own_filled": 1,
+        "status_text": "PARTIAL (1/2 filled)"
+      },
+      {
+        "rank": 29,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Simon, Matthew D",
+            "is_barry": false,
+            "seniority": 59,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Rubright, Marcus",
+            "is_barry": false,
+            "seniority": 46,
+            "is_subject": false
+          },
+          {
+            "name": "Dagar, Parveen",
+            "is_barry": false,
+            "seniority": 56,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F81",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 30,
+        "status": "competitive",
+        "ca_quota": 2,
+        "ca_seats": [
+          {
+            "name": "Thatcher, Arthur Jr.",
+            "is_barry": false,
+            "seniority": 17,
+            "is_subject": false
+          },
+          {
+            "name": "Helm, Tyler",
+            "is_barry": false,
+            "seniority": 19,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 1,
+        "fo_seats": [
+          {
+            "name": "Powell, Lachlan",
+            "is_barry": false,
+            "seniority": 102,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 2,
+        "fo_filled": 1,
+        "line_code": "R104",
+        "own_quota": 1,
+        "own_filled": 1,
+        "status_text": "COMPETITIVE (0 senior, 1 junior)"
+      },
+      {
+        "rank": 31,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Anesi, Benjamin",
+            "is_barry": false,
+            "seniority": 14,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Ashburn, Luke",
+            "is_barry": false,
+            "seniority": 100,
+            "is_subject": false
+          },
+          {
+            "name": "Pezzulo, Renato",
+            "is_barry": false,
+            "seniority": 132,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F75",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 32,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Kallay, Daniel",
+            "is_barry": false,
+            "seniority": 41,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Dang, Tai",
+            "is_barry": false,
+            "seniority": 62,
+            "is_subject": false
+          },
+          {
+            "name": "Fernandez, Gabriel",
+            "is_barry": false,
+            "seniority": 65,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F43",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 33,
+        "status": "partial",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Ferguson, Scott",
+            "is_barry": false,
+            "seniority": 106,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Helm, David",
+            "is_barry": false,
+            "seniority": 158,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 1,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 1,
+        "line_code": "F48",
+        "own_quota": 2,
+        "own_filled": 1,
+        "status_text": "PARTIAL (1/2 filled)"
+      },
+      {
+        "rank": 34,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Navarrete, Hernan D",
+            "is_barry": false,
+            "seniority": 63,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Marking, Jared",
+            "is_barry": false,
+            "seniority": 74,
+            "is_subject": false
+          },
+          {
+            "name": "Sabanski, Anthony",
+            "is_barry": false,
+            "seniority": 147,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F77",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      },
+      {
+        "rank": 35,
+        "status": "competitive",
+        "ca_quota": 1,
+        "ca_seats": [
+          {
+            "name": "Newnam, Kyle",
+            "is_barry": false,
+            "seniority": 98,
+            "is_subject": false
+          }
+        ],
+        "fo_quota": 2,
+        "fo_seats": [
+          {
+            "name": "Hogsed, Nicholas",
+            "is_barry": false,
+            "seniority": 121,
+            "is_subject": false
+          },
+          {
+            "name": "Rhodes, Ty",
+            "is_barry": false,
+            "seniority": 157,
+            "is_subject": false
+          }
+        ],
+        "n_junior": 2,
+        "n_senior": 0,
+        "ca_filled": 1,
+        "fo_filled": 2,
+        "line_code": "F33",
+        "own_quota": 2,
+        "own_filled": 2,
+        "status_text": "COMPETITIVE (0 senior, 2 junior)"
+      }
+    ],
+    "n_prefs": 35,
+    "summary": {
+      "open": 2,
+      "blocked": 7,
+      "ca_only": 0,
+      "partial": 6,
+      "winning": 0,
+      "projected": 1,
+      "competitive": 19
+    },
+    "generated": "2026-05-16 14:13",
+    "barry_name": "Moore, Barry",
+    "subject_name": "Moore, Barry",
+    "subject_class": "FO",
+    "senior_not_bid": [
+      {
+        "name": "Baumgartner, George",
+        "seniority": 6
+      },
+      {
+        "name": "Sendra, Jose",
+        "seniority": 12
+      },
+      {
+        "name": "Peroutka, David",
+        "seniority": 14
+      }
+    ],
+    "barry_seniority": 31,
+    "projected_award": "F6",
+    "subject_seniority": 31,
+    "senior_not_bid_count": 3,
+    "senior_not_bid_label": "Senior FOs"
+  }
+}
