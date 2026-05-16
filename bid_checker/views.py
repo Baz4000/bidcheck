@@ -25,7 +25,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 
-from .models import BidSnapshot, AppSettings, GuestPilot
+from .models import BidSnapshot, AppSettings, GuestPilot, MonthlyOverview
 from .scraper import scrape_bids, ScraperError
 from .analyzer import analyze_bids
 
@@ -42,12 +42,28 @@ GUEST_REFRESH_COOLDOWN_SECONDS = getattr(settings, 'GUEST_REFRESH_COOLDOWN_SECON
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _get_overview_bytes() -> bytes:
+    """Legacy fallback — reads the static file. Use _current_overview_bytes() instead."""
     if not OVERVIEW_PATH.exists():
         raise FileNotFoundError(
             f"Overview.xlsx not found at {OVERVIEW_PATH}. "
             "Copy it into empire-os/bid_checker/data/"
         )
     return OVERVIEW_PATH.read_bytes()
+
+
+def _current_overview_bytes() -> bytes:
+    """Return the current bid month's Overview.xlsx bytes.
+
+    The scraper populates MonthlyOverview on every refresh — keyed by bid
+    month — so the latest record is always the Overview for whatever cycle
+    we're currently bidding. The static file in bid_checker/data/ is only
+    used as a last-resort fallback (typically for a fresh install before
+    the first successful scrape).
+    """
+    mo = MonthlyOverview.objects.order_by('-month').first()
+    if mo and mo.xlsx_data:
+        return bytes(mo.xlsx_data)
+    return _get_overview_bytes()
 
 
 def _kalitta_credentials():
@@ -265,9 +281,10 @@ def guest_bid_status(request, staff_number):
             'guest': guest,
         }, status=503)
 
-    # 3. Re-run the analyzer from the guest's perspective
+    # 3. Re-run the analyzer from the guest's perspective.
+    #    Use the same Overview the scraper just cached — not the static fallback.
     try:
-        overview_bytes = _get_overview_bytes()
+        overview_bytes = _current_overview_bytes()
         report_data = analyze_bids(
             ca_xls=bytes(snapshot.ca_xls),
             fo_xls=bytes(snapshot.fo_xls),
