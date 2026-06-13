@@ -2,17 +2,19 @@
 Bid Checker — Views
 
 Authenticated routes:
-  GET  /bids/           → dashboard (latest snapshot)
-  POST /bids/refresh/   → run scraper + analyzer, save snapshot, redirect (UNTHROTTLED)
-  GET  /bids/history/   → list of past snapshots
-  GET  /bids/settings/  → view/update Kalitta credentials
-  POST /bids/settings/  → save credentials to DB
+GET  /bids/                    → dashboard (latest snapshot)
+POST /bids/refresh/            → run scraper + analyzer, save snapshot, redirect (UNTHROTTLED)
+GET  /bids/upload-overview/    → manual Overview upload form (shown when portal file not found)
+POST /bids/upload-overview/    → save uploaded XLSX to DB, then run full refresh
+GET  /bids/history/            → list of past snapshots
+GET  /bids/settings/           → view/update Kalitta credentials
+POST /bids/settings/           → save credentials to DB
 
 Public guest routes (no login):
-  GET  /guest/                          → staff-number entry form
-  POST /guest/                          → resolves to /guest/<staff_number>/
-  GET  /guest/<staff_number>/           → view that pilot's bid status (if approved)
-  POST /guest/<staff_number>/refresh/   → trigger a refresh (60s throttle, shared)
+GET  /guest/                           → staff-number entry form
+POST /guest/                           → resolves to /guest/<staff_number>/
+GET  /guest/<staff_number>/            → view that pilot's bid status (if approved)
+POST /guest/<staff_number>/refresh/    → trigger a refresh (60s throttle, shared)
 """
 import logging
 from datetime import datetime, timezone
@@ -26,7 +28,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import BidSnapshot, AppSettings, GuestPilot, MonthlyOverview
-from .scraper import scrape_bids, ScraperError
+from .scraper import scrape_bids, ScraperError, OverviewNotFoundError, _bid_month
 from .analyzer import analyze_bids
 
 logger = logging.getLogger('bid_checker')
@@ -37,7 +39,6 @@ OVERVIEW_PATH = settings.BASE_DIR / 'bid_checker' / 'data' / 'Overview.xlsx'
 # any refresh (Barry's or another guest's) resets the timer for everyone.
 # Barry's own refreshes are NOT subject to this throttle.
 GUEST_REFRESH_COOLDOWN_SECONDS = getattr(settings, 'GUEST_REFRESH_COOLDOWN_SECONDS', 60)
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -96,9 +97,14 @@ def _guest_refresh_cooldown():
 def _do_refresh():
     """Run scrape + analyze + save snapshot. Returns (level, message).
 
-    `level` is one of 'success', 'error' — suitable for messages.<level>().
-    On failure an error snapshot is still recorded so the cooldown timer
-    advances (preventing tight failure loops).
+    `level` is one of 'success', 'error', 'overview_needed'.
+    - 'success'         → refresh worked; message has the projected award.
+    - 'error'           → hard failure; message has the error detail.
+    - 'overview_needed' → the Overview XLSX wasn't found on the portal;
+                          caller should redirect to the manual upload page.
+
+    On hard failure an error snapshot is still recorded so the cooldown
+    timer advances (preventing tight failure loops).
     """
     try:
         username, password, employee_id = _kalitta_credentials()
@@ -130,6 +136,13 @@ def _do_refresh():
         projected = result.get('projected_award', '???')
         logger.info('Refresh complete. Projected award: %s', projected)
         return 'success', f"Bids refreshed — projected award: {projected}"
+
+    except OverviewNotFoundError as e:
+        # Recoverable — portal filename changed or file not yet posted.
+        # Don't record an error snapshot; just signal the caller to show the
+        # manual upload form so the user can supply the file themselves.
+        logger.warning('Overview not found on portal: %s', e)
+        return 'overview_needed', str(e)
 
     except ScraperError as e:
         logger.error('Scraper error: %s', e)
@@ -172,8 +185,64 @@ def trigger_refresh(request):
     """Barry's authenticated refresh — no throttle."""
     logger.info('Manual refresh triggered by %s', request.user)
     level, message = _do_refresh()
+
+    if level == 'overview_needed':
+        # Portal doesn't have the file yet (or filename changed).
+        # Redirect to the manual upload page instead of showing a hard error.
+        messages.warning(request, message)
+        return redirect('bid_checker:upload_overview')
+
     getattr(messages, level)(request, message)
     return redirect('bid_checker:dashboard')
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def upload_overview(request):
+    """Manual Overview XLSX upload.
+
+    Shown when the scraper can't find the Overview file on the portal.
+    The user downloads the file from the portal manually, then uploads it
+    here. Once saved to DB the full refresh runs automatically.
+    """
+    bid_mon = _bid_month()
+
+    if request.method == 'POST':
+        f = request.FILES.get('overview_file')
+
+        if not f:
+            messages.error(request, 'No file selected — please choose the Overview XLSX.')
+            return redirect('bid_checker:upload_overview')
+
+        if not f.name.lower().endswith('.xlsx'):
+            messages.error(request, 'File must be an .xlsx file.')
+            return redirect('bid_checker:upload_overview')
+
+        data = f.read()
+        if len(data) < 1000:
+            messages.error(request, 'File looks too small — may not be a valid XLSX.')
+            return redirect('bid_checker:upload_overview')
+
+        # Upsert — replaces any existing record for this bid month
+        MonthlyOverview.objects.update_or_create(
+            month=bid_mon,
+            defaults={'xlsx_data': data},
+        )
+        logger.info('Overview manually uploaded for %s (%d bytes)', bid_mon, len(data))
+        messages.success(
+            request,
+            f'Overview for {bid_mon.strftime("%B %Y")} uploaded — running full refresh…'
+        )
+
+        # Re-run scrape; Overview is now in DB so it won't be re-downloaded
+        level, message = _do_refresh()
+        getattr(messages, level)(request, message)
+        return redirect('bid_checker:dashboard')
+
+    return render(request, 'bid_checker/upload_overview.html', {
+        'page_title': 'Upload Overview',
+        'bid_month': bid_mon.strftime('%B %Y'),
+    })
 
 
 @login_required
@@ -203,8 +272,8 @@ def credential_settings(request):
     username, _, employee_id = _kalitta_credentials()
 
     if request.method == 'POST':
-        new_username    = request.POST.get('kalitta_username', '').strip()
-        new_password    = request.POST.get('kalitta_password', '').strip()
+        new_username    = request.POST.get('kalitta_username',    '').strip()
+        new_password    = request.POST.get('kalitta_password',    '').strip()
         new_employee_id = request.POST.get('kalitta_employee_id', '').strip()
 
         updated = []
@@ -252,10 +321,10 @@ def guest_bid_status(request, staff_number):
     """Render the bid analysis from a guest pilot's perspective.
 
     Gracefully handles four not-allowed states:
-      - pilot not in GuestPilot table          → "ask Barry for access"
-      - pilot exists but is_active=False       → "your account is pending"
-      - no snapshot exists yet                 → "no bid data yet"
-      - pilot is approved but no current bids  → "no current bid data"
+    - pilot not in GuestPilot table     → "ask Barry for access"
+    - pilot exists but is_active=False  → "your account is pending"
+    - no snapshot exists yet            → "no bid data yet"
+    - pilot is approved but no bids     → "no current bid data"
     """
     # 1. Look up the guest
     try:
@@ -282,7 +351,6 @@ def guest_bid_status(request, staff_number):
         }, status=503)
 
     # 3. Re-run the analyzer from the guest's perspective.
-    #    Use the same Overview the scraper just cached — not the static fallback.
     try:
         overview_bytes = _current_overview_bytes()
         report_data = analyze_bids(
@@ -319,22 +387,21 @@ def guest_bid_status(request, staff_number):
     # 6. Synthesize a snapshot-like object for the template
     class _GuestSnapshot:
         def __init__(self, report_data, created_at):
-            self.report_data = report_data
-            self.created_at = created_at
+            self.report_data    = report_data
+            self.created_at     = created_at
             self.projected_award = report_data.get('projected_award', '???')
 
     guest_snapshot = _GuestSnapshot(report_data, snapshot.created_at)
 
     return render(request, 'bid_checker/dashboard.html', {
-        'snapshot':             guest_snapshot,
-        'page_title':           f'Bid Status — {guest.name}',
-        'is_guest':             True,
-        'guest':                guest,
-        'base_template':        'base_guest.html',
-        'can_refresh':          can_refresh,
-        'retry_after_seconds':  retry_after,
-        'refresh_url':          reverse('guest_trigger_refresh',
-                                        args=[guest.staff_number]),
+        'snapshot': guest_snapshot,
+        'page_title': f'Bid Status — {guest.name}',
+        'is_guest': True,
+        'guest': guest,
+        'base_template': 'base_guest.html',
+        'can_refresh': can_refresh,
+        'retry_after_seconds': retry_after,
+        'refresh_url': reverse('guest_trigger_refresh', args=[guest.staff_number]),
     })
 
 
@@ -346,7 +413,6 @@ def guest_trigger_refresh(request, staff_number):
     the timer for everyone. This protects the Kalitta account from being
     hammered when many guests are watching the close window.
     """
-    # Validate guest exists and is active
     try:
         guest = GuestPilot.objects.get(staff_number=staff_number)
     except GuestPilot.DoesNotExist:
@@ -354,7 +420,6 @@ def guest_trigger_refresh(request, staff_number):
     if not guest.is_active:
         return redirect('guest_bid_status', staff_number=staff_number)
 
-    # Throttle check
     can_refresh, retry_after = _guest_refresh_cooldown()
     if not can_refresh:
         messages.warning(

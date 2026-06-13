@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Overview — {{ bid_month }}{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div class="topbar-left">
+        <h1>UPLOAD OVERVIEW — {{ bid_month }}</h1>
+    </div>
+</div>
+
+{% if messages %}
+<div class="messages">
+    {% for msg in messages %}
+    <div class="msg msg-{{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="settings-card">
+    <p class="settings-note">
+        The <strong>{{ bid_month }} 777 Overview.xlsx</strong> file wasn't found on the
+        crew portal — it may not have been posted yet, or the filename changed.
+    </p>
+    <p class="settings-note">
+        Download it manually from
+        <strong>crewbids.kalittaair.com → Documents</strong>,
+        then upload it here. The full refresh will run automatically once it's saved.
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="field-group">
+            <label for="overview_file">Overview XLSX file</label>
+            <input type="file" id="overview_file" name="overview_file" accept=".xlsx">
+            <span class="field-hint">Must be the .xlsx file for {{ bid_month }}.</span>
+        </div>
+        <button class="btn-refresh" type="submit">⬆️ Upload &amp; Refresh</button>
+        <a href="{% url 'bid_checker:dashboard' %}" class="btn-back" style="margin-left:12px;">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.settings-card {
+    background: #fff;
+    border: 1px solid #d8dce3;
+    border-radius: 8px;
+    padding: 28px 32px;
+    max-width: 520px;
+}
+.settings-note {
+    color: #667;
+    font-size: .87em;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+    margin-top: 24px;
+}
+.field-group label {
+    font-weight: 600;
+    font-size: .85em;
+    color: #334;
+}
+.field-group input[type="file"] {
+    padding: 9px 0;
+    font-size: .9em;
+}
+.field-hint {
+    font-size: .78em;
+    color: #999;
+}
+</style>
+{% endblock %}

@@ -2,19 +2,19 @@
 Bid Checker — Playwright Scraper
 
 On each run the scraper:
-  1. Logs in to crewbids.kalittaair.com
-  2. Checks the database for a stored Overview.xlsx for the current bid month
-     (bid month = next calendar month, since we bid in month N for month N+1).
-     If none exists it downloads it from Documents.aspx and stores it.
-  3. Downloads FO AllBids, Barry's bids, and CA AllBids XLS files.
+1. Logs in to crewbids.kalittaair.com
+2. Checks the database for a stored Overview.xlsx for the current bid month
+   (bid month = next calendar month, since we bid in month N for month N+1).
+   If none exists it downloads it from Documents.aspx and stores it.
+3. Downloads FO AllBids, Barry's bids, and CA AllBids XLS files.
 
 Returns:
-  {
-    'ca':       bytes,   # CA AllBids XLS
-    'fo':       bytes,   # FO AllBids XLS
-    'barry':    bytes,   # Barry's personal bids XLS
-    'overview': bytes,   # Monthly Overview XLSX (from DB or freshly downloaded)
-  }
+{
+    'ca': bytes,       # CA AllBids XLS
+    'fo': bytes,       # FO AllBids XLS
+    'barry': bytes,    # Barry's personal bids XLS
+    'overview': bytes, # Monthly Overview XLSX (from DB or freshly downloaded)
+}
 """
 import asyncio
 import datetime
@@ -24,19 +24,27 @@ from pathlib import Path
 
 logger = logging.getLogger('bid_checker')
 
-BASE_URL    = 'https://crewbids.kalittaair.com'
-LOGIN_URL   = f'{BASE_URL}/Pages/Login.aspx'
-BIDS_URL    = f'{BASE_URL}/Pages/ViewAllBids.aspx'
-DOCS_URL    = f'{BASE_URL}/Pages/Documents.aspx'
+BASE_URL = 'https://crewbids.kalittaair.com'
+LOGIN_URL = f'{BASE_URL}/Pages/Login.aspx'
+BIDS_URL  = f'{BASE_URL}/Pages/ViewAllBids.aspx'
+DOCS_URL  = f'{BASE_URL}/Pages/Documents.aspx'
 RADIO_CA    = 'ContentPlaceHolder1_RadioButtonList1_0'
 RADIO_FO    = 'ContentPlaceHolder1_RadioButtonList1_1'
 DROPDOWN_ID = 'ContentPlaceHolder1_ddl_crewMembers'
-FMT_SEL     = '#ContentPlaceHolder1_ReportViewer1_ctl01_ctl05_ctl00'
-EXP_LINK    = '#ContentPlaceHolder1_ReportViewer1_ctl01_ctl05_ctl01'
+FMT_SEL  = '#ContentPlaceHolder1_ReportViewer1_ctl01_ctl05_ctl00'
+EXP_LINK = '#ContentPlaceHolder1_ReportViewer1_ctl01_ctl05_ctl01'
 
 
 class ScraperError(Exception):
     pass
+
+
+class OverviewNotFoundError(ScraperError):
+    """Raised when the Overview XLSX link cannot be found on Documents.aspx.
+
+    This is a recoverable condition — the caller can prompt for a manual
+    upload rather than treating it as a hard failure.
+    """
 
 
 def _bid_month() -> datetime.date:
@@ -67,16 +75,28 @@ async def _login(page, username, password):
 
 
 async def _download_overview(page, bid_month: datetime.date) -> bytes:
-    """Download the monthly Overview.xlsx from Documents.aspx."""
-    link_text = f'777 {bid_month.strftime("%B %Y")} Overview.xlsx'
+    """Download the monthly Overview.xlsx from Documents.aspx.
+
+    Raises OverviewNotFoundError if the link cannot be located — the portal
+    occasionally uses a different filename format between bid cycles.
+    """
+    # Portal uses "Month Year 777 Overview.xlsx" format (e.g. "July 2026 777 Overview.xlsx")
+    link_text = f'{bid_month.strftime("%B %Y")} 777 Overview.xlsx'
     logger.info('Downloading Overview: %s', link_text)
     await page.goto(DOCS_URL, wait_until='domcontentloaded', timeout=30_000)
-    async with page.expect_download(timeout=30_000) as dl:
-        await page.get_by_text(link_text, exact=True).click()
-    download = await dl.value
+    try:
+        async with page.expect_download(timeout=30_000) as dl:
+            # exact=False: partial match so minor portal naming changes don't hard-crash
+            await page.get_by_text(link_text, exact=False).click(timeout=15_000)
+        download = await dl.value
+    except Exception as exc:
+        raise OverviewNotFoundError(
+            f'Overview file not found on portal (looked for "{link_text}")'
+        ) from exc
+
     with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as tmp:
         tmp_path = Path(tmp.name)
-    await download.save_as(tmp_path)
+        await download.save_as(tmp_path)
     data = tmp_path.read_bytes()
     tmp_path.unlink(missing_ok=True)
     if len(data) < 1000:
@@ -110,7 +130,7 @@ async def _export_xls(page, context) -> bytes:
     download = await dl_info.value
     with tempfile.NamedTemporaryFile(suffix='.xls', delete=False) as tmp:
         tmp_path = Path(tmp.name)
-    await download.save_as(tmp_path)
+        await download.save_as(tmp_path)
     data = tmp_path.read_bytes()
     tmp_path.unlink(missing_ok=True)
     if len(data) < 1024:
@@ -147,11 +167,11 @@ async def scrape_bids_async(username, password, barry_employee_id='71837'):
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         context = await browser.new_context(accept_downloads=True)
-        page    = await context.new_page()
+        page = await context.new_page()
         try:
             await _login(page, username, password)
 
-            # Download Overview if not cached
+            # Download Overview if not cached — OverviewNotFoundError propagates up
             if need_overview:
                 overview_bytes = await _download_overview(page, bid_mon)
                 await save_overview(overview_bytes)
@@ -179,7 +199,7 @@ async def scrape_bids_async(username, password, barry_employee_id='71837'):
             ca_xls = await _export_xls(page, context)
             logger.info('CA XLS: %d bytes', len(ca_xls))
 
-        except ScraperError:
+        except (ScraperError, OverviewNotFoundError):
             raise
         except Exception as e:
             raise ScraperError(f'Unexpected error: {e}') from e
