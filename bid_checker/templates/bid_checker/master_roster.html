@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Master Roster — Bid Checker{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Page header ─────────────────────────────────────────────── */
+  .roster-topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .roster-topbar-left { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .roster-ts { font-size: .82em; color: #667; }
+  .roster-ts b { color: #334; }
+
+  /* ── Stat pills ──────────────────────────────────────────────── */
+  .stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat-pill {
+    background: #edf0f5;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: .82em;
+    text-align: center;
+    min-width: 100px;
+  }
+  .stat-pill .val { font-size: 1.5em; font-weight: 700; color: #1a2744; display: block; }
+  .stat-pill .lbl { color: #667; margin-top: 2px; }
+  .stat-pill.green .val { color: #155724; }
+  .stat-pill.blue  .val { color: #004085; }
+  .stat-pill.amber .val { color: #856404; }
+
+  /* ── Search / filter bar ─────────────────────────────────────── */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .filter-bar input[type="text"] {
+    padding: 7px 12px;
+    border: 1px solid #ccd0d8;
+    border-radius: 5px;
+    font-size: .88em;
+    width: 260px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .filter-bar input[type="text"]:focus { border-color: #1a4a7a; }
+  .filter-bar label { font-size: .83em; color: #556; }
+  .filter-bar select {
+    padding: 7px 10px;
+    border: 1px solid #ccd0d8;
+    border-radius: 5px;
+    font-size: .85em;
+    background: #fff;
+    cursor: pointer;
+  }
+  #matchCount { font-size: .82em; color: #889; margin-left: 4px; }
+
+  /* ── Table ───────────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  .roster-table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #d8dce3;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: .88em;
+  }
+  .roster-table thead th {
+    background: #edf0f5;
+    color: #4a5568;
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: .78em;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #d0d5dd;
+    white-space: nowrap;
+  }
+  .roster-table tbody tr {
+    border-bottom: 1px solid #eef0f4;
+    transition: background .1s;
+  }
+  .roster-table tbody tr:hover { filter: brightness(.97); }
+  .roster-table td { padding: 8px 12px; vertical-align: top; }
+
+  /* Line code column */
+  .col-line {
+    font-weight: 700;
+    font-size: .95em;
+    color: #1a2744;
+    white-space: nowrap;
+    width: 80px;
+  }
+  /* CA-only badge */
+  .ca-only-badge {
+    display: inline-block;
+    background: #e8e8f0;
+    color: #6060a0;
+    border: 1px solid #d0d0e0;
+    border-radius: 3px;
+    font-size: .7em;
+    padding: 1px 5px;
+    margin-left: 5px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  /* Quota column */
+  .col-quota {
+    white-space: nowrap;
+    font-size: .82em;
+    color: #556;
+    width: 90px;
+  }
+  .quota-full  { color: #155724; font-weight: 700; }
+  .quota-empty { color: #aaa; }
+
+  /* Crew name columns */
+  .col-crew { line-height: 1.8; min-width: 200px; }
+  .crew-name { display: inline-block; white-space: nowrap; }
+  .crew-sen  { color: #999; font-size: .78em; margin-right: 4px; }
+  .crew-sep  { color: #ddd; margin: 0 3px; }
+  .vacant    { color: #bbb; font-style: italic; font-size: .85em; }
+
+  /* Row state colours */
+  tr.row-full    { background: #f0faf2; }
+  tr.row-empty   { background: #fafafa; }
+  tr.row-partial { }
+  tr.row-caonly  { background: #f4f4f9; }
+
+  /* Hidden rows (filter) */
+  tr.row-hidden  { display: none; }
+
+  /* ── Empty state ─────────────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #667;
+  }
+  .empty-state p { margin-bottom: 16px; font-size: 1.05em; }
+
+  /* ── Footer note ─────────────────────────────────────────────── */
+  .tbl-footer { margin-top: 12px; font-size: .78em; color: #999; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if not roster %}
+<div class="empty-state">
+  <p>No bid data available yet.</p>
+  <a href="{% url 'bid_checker:dashboard' %}" style="color:#3060a0">← Back to Dashboard</a>
+</div>
+
+{% else %}
+
+<!-- ── Top bar ───────────────────────────────────────────────────── -->
+<div class="roster-topbar">
+  <div class="roster-topbar-left">
+    <h1>MASTER ROSTER</h1>
+    <span class="tag">777 Fleet</span>
+    <span class="tag">Simulated Allocation</span>
+  </div>
+  <div class="roster-ts">
+    Data as of&nbsp;<b>{{ roster.generated }} UTC</b>
+  </div>
+</div>
+
+<!-- ── Stat pills ────────────────────────────────────────────────── -->
+<div class="stat-row">
+  <div class="stat-pill">
+    <span class="val">{{ roster.total_lines }}</span>
+    <span class="lbl">Total Lines</span>
+  </div>
+  <div class="stat-pill green">
+    <span class="val">{{ roster.lines_with_crew }}</span>
+    <span class="lbl">Lines Filled</span>
+  </div>
+  <div class="stat-pill blue">
+    <span class="val">{{ roster.ca_allocated }}</span>
+    <span class="lbl">CAs Placed</span>
+  </div>
+  <div class="stat-pill blue">
+    <span class="val">{{ roster.fo_allocated }}</span>
+    <span class="lbl">FOs Placed</span>
+  </div>
+  <div class="stat-pill amber">
+    <span class="val">{{ roster.ca_pilot_count }}</span>
+    <span class="lbl">CAs in Bid</span>
+  </div>
+  <div class="stat-pill amber">
+    <span class="val">{{ roster.fo_pilot_count }}</span>
+    <span class="lbl">FOs in Bid</span>
+  </div>
+</div>
+
+<!-- ── Filter bar ────────────────────────────────────────────────── -->
+<div class="filter-bar">
+  <input type="text" id="nameSearch" placeholder="Search pilot name…" oninput="filterRoster()">
+  <select id="fillFilter" onchange="filterRoster()">
+    <option value="all">All lines</option>
+    <option value="filled">Fully filled</option>
+    <option value="partial">Partially filled</option>
+    <option value="empty">No crew yet</option>
+    <option value="caonly">CA-only lines</option>
+  </select>
+  <span id="matchCount"></span>
+</div>
+
+<!-- ── Roster table ──────────────────────────────────────────────── -->
+<div class="table-wrap">
+<table class="roster-table" id="rosterTable">
+  <thead>
+    <tr>
+      <th>Line</th>
+      <th>Quota</th>
+      <th>Captain(s)</th>
+      <th>First Officer(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for line in roster.lines %}
+    <tr class="
+      {% if line.is_full %}row-full
+      {% elif line.is_empty %}row-empty
+      {% elif line.ca_only %}row-caonly
+      {% else %}row-partial
+      {% endif %}
+    "
+      data-caonly="{{ line.ca_only|yesno:'1,0' }}"
+      data-full="{{ line.is_full|yesno:'1,0' }}"
+      data-empty="{{ line.is_empty|yesno:'1,0' }}"
+      data-crew="{% for p in line.ca_crew %}{{ p.name|lower }} {% endfor %}{% for p in line.fo_crew %}{{ p.name|lower }} {% endfor %}"
+    >
+      <td class="col-line">
+        {{ line.line_code }}
+        {% if line.ca_only %}<span class="ca-only-badge">CA ONLY</span>{% endif %}
+      </td>
+
+      <td class="col-quota">
+        <span class="{% if line.ca_filled >= line.ca_quota %}quota-full{% elif line.ca_filled == 0 %}quota-empty{% endif %}">
+          {{ line.ca_filled }}/{{ line.ca_quota }} CA
+        </span>
+        {% if not line.ca_only %}
+        <br>
+        <span class="{% if line.fo_filled >= line.fo_quota %}quota-full{% elif line.fo_filled == 0 %}quota-empty{% endif %}">
+          {{ line.fo_filled }}/{{ line.fo_quota }} FO
+        </span>
+        {% endif %}
+      </td>
+
+      <td class="col-crew">
+        {% if line.ca_crew %}
+          {% for pilot in line.ca_crew %}
+            <span class="crew-name">
+              <span class="crew-sen">#{{ pilot.seniority }}</span>{{ pilot.name }}
+            </span>{% if not forloop.last %}<span class="crew-sep">·</span>{% endif %}
+          {% endfor %}
+        {% else %}
+          <span class="vacant">—</span>
+        {% endif %}
+      </td>
+
+      <td class="col-crew">
+        {% if line.ca_only %}
+          <span class="vacant">CA-only line</span>
+        {% elif line.fo_crew %}
+          {% for pilot in line.fo_crew %}
+            <span class="crew-name">
+              <span class="crew-sen">#{{ pilot.seniority }}</span>{{ pilot.name }}
+            </span>{% if not forloop.last %}<span class="crew-sep">·</span>{% endif %}
+          {% endfor %}
+        {% else %}
+          <span class="vacant">—</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p class="tbl-footer">
+  Simulated allocation — reflects current bid preferences as scraped from crewbids.kalittaair.com.
+  Actual awards may differ.
+  <a href="{% url 'bid_checker:dashboard' %}">← My Bid Status</a>
+</p>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterRoster() {
+  const nameQ  = document.getElementById('nameSearch').value.toLowerCase().trim();
+  const fillQ  = document.getElementById('fillFilter').value;
+  const rows   = document.querySelectorAll('#rosterTable tbody tr');
+  let visible  = 0;
+
+  rows.forEach(row => {
+    const crew    = row.dataset.crew || '';
+    const isFull  = row.dataset.full  === '1';
+    const isEmpty = row.dataset.empty === '1';
+    const isCaOnly = row.dataset.caonly === '1';
+    const isPartial = !isFull && !isEmpty;
+
+    // Name filter
+    const nameMatch = !nameQ || crew.includes(nameQ);
+
+    // Fill filter
+    let fillMatch = true;
+    if (fillQ === 'filled')  fillMatch = isFull;
+    if (fillQ === 'partial') fillMatch = isPartial;
+    if (fillQ === 'empty')   fillMatch = isEmpty;
+    if (fillQ === 'caonly')  fillMatch = isCaOnly;
+
+    if (nameMatch && fillMatch) {
+      row.classList.remove('row-hidden');
+      visible++;
+    } else {
+      row.classList.add('row-hidden');
+    }
+  });
+
+  const total = rows.length;
+  const countEl = document.getElementById('matchCount');
+  if (nameQ || fillQ !== 'all') {
+    countEl.textContent = `${visible} of ${total} lines`;
+  } else {
+    countEl.textContent = '';
+  }
+}
+</script>
+{% endblock %}

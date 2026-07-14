@@ -7,6 +7,7 @@ POST /bids/refresh/            → run scraper + analyzer, save snapshot, redire
 GET  /bids/upload-overview/    → manual Overview upload form (shown when portal file not found)
 POST /bids/upload-overview/    → save uploaded XLSX to DB, then run full refresh
 GET  /bids/history/            → list of past snapshots
+GET  /bids/roster/             → master roster: all lines + current crew
 GET  /bids/settings/           → view/update Kalitta credentials
 POST /bids/settings/           → save credentials to DB
 
@@ -29,7 +30,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import BidSnapshot, AppSettings, GuestPilot, MonthlyOverview
 from .scraper import scrape_bids, ScraperError, OverviewNotFoundError, _bid_month
-from .analyzer import analyze_bids
+from .analyzer import analyze_bids, get_full_allocation
 
 logger = logging.getLogger('bid_checker')
 
@@ -263,6 +264,37 @@ def snapshot_detail(request, pk):
         'is_historical': True,
         'is_guest': False,
         'base_template': 'base.html',
+    })
+
+
+@login_required
+def master_roster(request):
+    """All lines with their current simulated crew — the full fleet picture."""
+    snapshot = BidSnapshot.objects.filter(success=True).order_by('-created_at').first()
+
+    if not snapshot:
+        return render(request, 'bid_checker/master_roster.html', {
+            'page_title': 'Master Roster',
+            'roster': None,
+            'snapshot': None,
+        })
+
+    try:
+        overview_bytes = _current_overview_bytes()
+        roster = get_full_allocation(
+            ca_xls=bytes(snapshot.ca_xls),
+            fo_xls=bytes(snapshot.fo_xls),
+            overview_xlsx=overview_bytes,
+        )
+    except Exception as e:
+        logger.exception('Master roster build failed')
+        messages.error(request, f'Could not build roster: {e}')
+        return redirect('bid_checker:dashboard')
+
+    return render(request, 'bid_checker/master_roster.html', {
+        'page_title': 'Master Roster',
+        'roster': roster,
+        'snapshot': snapshot,
     })
 
 

@@ -197,6 +197,71 @@ def build_sim_seats(allocation, ca_pilots, fo_pilots):
     return sim_seats
 
 
+def _line_sort_key(line_code: str) -> int:
+    """Sort line codes by their numeric component (F1, Q89, R105 → 1, 89, 105)."""
+    m = re.search(r'(\d+)', line_code)
+    return int(m.group(1)) if m else 9999
+
+
+def get_full_allocation(ca_xls: bytes, fo_xls: bytes, overview_xlsx: bytes) -> dict:
+    """Return the simulated crew allocation for ALL lines — no subject pilot needed.
+
+    Used by the Master Roster view to show who is sitting on every line.
+
+    Returns
+    -------
+    dict with keys:
+        lines           : list of dicts, one per line, sorted numerically
+        generated       : UTC timestamp string
+        total_lines     : int — lines in the overview
+        ca_pilot_count  : int — CAs who submitted bids
+        fo_pilot_count  : int — FOs who submitted bids
+        ca_allocated    : int — CAs awarded a line
+        fo_allocated    : int — FOs awarded a line
+        lines_with_crew : int — lines that have at least one assigned pilot
+    """
+    line_info   = parse_overview(overview_xlsx)
+    line_lookup = build_line_lookup(line_info)
+    ca_pilots   = parse_bids_xls(ca_xls, line_lookup)
+    fo_pilots   = parse_bids_xls(fo_xls, line_lookup)
+    allocation  = simulate_allocation(ca_pilots, fo_pilots, line_info)
+    sim_seats   = build_sim_seats(allocation, ca_pilots, fo_pilots)
+
+    lines = []
+    for line_code in sorted(line_info.keys(), key=_line_sort_key):
+        info  = line_info[line_code]
+        seats = sim_seats.get(line_code, {'ca': [], 'fo': []})
+        ca_crew = [{'seniority': s, 'name': n} for s, n in seats['ca']]
+        fo_crew = [{'seniority': s, 'name': n} for s, n in seats['fo']]
+        lines.append({
+            'line_code':  line_code,
+            'ca_only':    info['ca_only'],
+            'ca_quota':   info['ca'],
+            'fo_quota':   info['fo'],
+            'ca_filled':  len(ca_crew),
+            'fo_filled':  len(fo_crew),
+            'ca_crew':    ca_crew,
+            'fo_crew':    fo_crew,
+            'is_full':    (len(ca_crew) >= info['ca'] and
+                           (info['ca_only'] or len(fo_crew) >= info['fo'])),
+            'is_empty':   len(ca_crew) == 0 and len(fo_crew) == 0,
+        })
+
+    ca_alloc = sum(1 for p, ln in allocation.items() if p in ca_pilots)
+    fo_alloc = sum(1 for p, ln in allocation.items() if p in fo_pilots)
+
+    return {
+        'lines':            lines,
+        'generated':        datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
+        'total_lines':      len(line_info),
+        'ca_pilot_count':   len(ca_pilots),
+        'fo_pilot_count':   len(fo_pilots),
+        'ca_allocated':     ca_alloc,
+        'fo_allocated':     fo_alloc,
+        'lines_with_crew':  sum(1 for ln in lines if not ln['is_empty']),
+    }
+
+
 def analyze_bids(ca_xls, fo_xls, overview_xlsx,
                  subject_name='Moore, Barry',
                  subject_class='FO',
